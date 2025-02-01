@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Tracker</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <style>
+        .activity-card {
+            transition: transform 0.3s;
+        }
+        .activity-card:hover {
+            transform: translateY(-5px);
+        }
+        #notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: none;
+        }
+        .progress {
+            height: 25px;
+            margin-bottom: 20px;
+        }
+        .profile-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        /* Activity-specific colors */
+        .walking { background-color: #4CAF50; color: white; }
+        .running { background-color: #2196F3; color: white; }
+        .cycling { background-color: #FF9800; color: white; }
+        .swimming { background-color: #9C27B0; color: white; }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Notification Alert -->
+    <div id="notification" class="alert alert-success" role="alert"></div>
+
+    <!-- Welcome Alert Box -->
+    <div id="welcomeAlert" class="alert alert-info alert-dismissible fade show text-center" role="alert" style="display: none;">
+        <strong>Welcome to Fitness Tracker!</strong> Please <a href="#" data-bs-toggle="modal" data-bs-target="#signInModal">Sign In</a> or <a href="#" data-bs-toggle="modal" data-bs-target="#signUpModal">Sign Up</a> to get started.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Fitness Tracker</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item" id="signUpNav">
+                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#signUpModal">Sign Up</a>
+                    </li>
+                    <li class="nav-item" id="signInNav">
+                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#signInModal">Sign In</a>
+                    </li>
+                    <li class="nav-item dropdown" id="profileNav" style="display: none;">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user profile-icon"></i>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" id="viewProfile">Profile</a></li>
+                            <li><a class="dropdown-item" href="#" id="logout">Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container py-5">
+        <h1 class="text-center mb-4">Fitness Tracker</h1>
+
+        <!-- Activity Input Form -->
+        <div class="card mb-4" id="activityFormSection" style="display: none;">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-plus-circle-fill text-primary"></i> Add New Activity</h5>
+                <form id="activityForm">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <select class="form-select" id="activityType" required>
+                                <option value="">Select Activity</option>
+                                <option value="walking">Walking</option>
+                                <option value="running">Running</option>
+                                <option value="cycling">Cycling</option>
+                                <option value="swimming">Swimming</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" class="form-control" id="duration" placeholder="Duration" required>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="durationUnit">
+                                <option value="minutes">Minutes</option>
+                                <option value="hours">Hours</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" class="form-control" id="distance" placeholder="Distance" step="0.1">
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="distanceUnit">
+                                <option value="km">Kilometers</option>
+                                <option value="miles">Miles</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="submit" class="btn btn-primary w-100">Add</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="row mb-4" id="dashboardSection" style="display: none;">
+            <div class="col-md-6 mb-3">
+                <div class="card activity-card bg-info text-white">
+                    <div class="card-body">
+                        <h5><i class="bi bi-bar-chart-line-fill"></i> Today's Summary</h5>
+                        <p class="mb-1">Total Activities: <span id="totalActivities">0</span></p>
+                        <p class="mb-1">Total Duration: <span id="totalDuration">0</span> mins</p>
+                        <p>Total Distance: <span id="totalDistance">0</span> km</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card activity-card bg-success text-white">
+                    <div class="card-body">
+                        <h5><i class="bi bi-trophy-fill"></i> Daily Goal Progress</h5>
+                        <div class="mb-2">
+                            <label>Daily Goal: <span id="dailyGoalValue">30</span> minutes</label>
+                            <div class="progress">
+                                <div id="goalProgress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity History -->
+        <div class="card" id="activityHistorySection" style="display: none;">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-clock-history"></i> Activity History</h5>
+                <div id="activityList" class="row"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sign Up Modal -->
+    <div class="modal fade" id="signUpModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sign Up</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="signUpForm">
+                        <div class="mb-3">
+                            <label>Name</label>
+                            <input type="text" class="form-control" id="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Date of Birth</label>
+                            <input type="date" class="form-control" id="dob" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Email</label>
+                            <input type="email" class="form-control" id="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Username</label>
+                            <input type="text" class="form-control" id="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Password</label>
+                            <input type="password" class="form-control" id="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Sign Up</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sign In Modal -->
+    <div class="modal fade" id="signInModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sign In</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="signInForm">
+                        <div class="mb-3">
+                            <label>Username</label>
+                            <input type="text" class="form-control" id="loginUsername" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Password</label>
+                            <input type="password" class="form-control" id="loginPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Sign In</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal fade" id="profileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Profile</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Username:</strong> <span id="profileUsername"></span></p>
+                    <p><strong>Age:</strong> <span id="profileAge"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script>
+        // Initialize local storage
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+        let activities = JSON.parse(localStorage.getItem('activities')) || [];
+        const DAILY_GOAL = 30; // Fixed daily goal in minutes
+
+        // DOM Elements
+        const activityFormSection = document.getElementById('activityFormSection');
+        const dashboardSection = document.getElementById('dashboardSection');
+        const activityHistorySection = document.getElementById('activityHistorySection');
+        const notification = document.getElementById('notification');
+        const signUpNav = document.getElementById('signUpNav');
+        const signInNav = document.getElementById('signInNav');
+        const profileNav = document.getElementById('profileNav');
+        const dailyGoalValue = document.getElementById('dailyGoalValue');
+        const welcomeAlert = document.getElementById('welcomeAlert');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            dailyGoalValue.textContent = DAILY_GOAL;
+            checkAuth();
+            if (currentUser) {
+                updateDashboard();
+                renderActivities();
+            } else {
+                welcomeAlert.style.display = 'block'; // Show welcome alert for new users
+            }
+        });
+
+        // Check Authentication
+        function checkAuth() {
+            if (currentUser) {
+                signUpNav.style.display = 'none';
+                signInNav.style.display = 'none';
+                profileNav.style.display = 'block';
+                activityFormSection.style.display = 'block';
+                dashboardSection.style.display = 'block';
+                activityHistorySection.style.display = 'block';
+            } else {
+                signUpNav.style.display = 'block';
+                signInNav.style.display = 'block';
+                profileNav.style.display = 'none';
+                activityFormSection.style.display = 'none';
+                dashboardSection.style.display = 'none';
+                activityHistorySection.style.display = 'none';
+            }
+        }
+
+        // Sign Up Form Handler
+        document.getElementById('signUpForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = {
+                name: document.getElementById('name').value,
+                dob: document.getElementById('dob').value,
+                email: document.getElementById('email').value,
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value
+            };
+            users.push(user);
+            localStorage.setItem('users', JSON.stringify(users));
+            showNotification('Sign up successful! Please sign in.');
+            $('#signUpModal').modal('hide');
+        });
+
+        // Sign In Form Handler
+        document.getElementById('signInForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            const user = users.find(u => u.username === username && u.password === password);
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                checkAuth();
+                updateDashboard();
+                renderActivities();
+                showNotification('Sign in successful!');
+                $('#signInModal').modal('hide');
+            } else {
+                showNotification('Invalid username or password.', 'danger');
+            }
+        });
+
+        // Logout Handler
+        document.getElementById('logout').addEventListener('click', () => {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            checkAuth();
+            showNotification('Logged out successfully.');
+        });
+
+        // View Profile Handler
+        document.getElementById('viewProfile').addEventListener('click', () => {
+            const dob = new Date(currentUser.dob);
+            const age = new Date().getFullYear() - dob.getFullYear();
+            document.getElementById('profileUsername').textContent = currentUser.username;
+            document.getElementById('profileAge').textContent = age;
+            $('#profileModal').modal('show');
+        });
+
+        // Activity Form Handler
+        document.getElementById('activityForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const duration = parseInt(document.getElementById('duration').value);
+            const durationUnit = document.getElementById('durationUnit').value;
+            const distance = parseFloat(document.getElementById('distance').value) || 0;
+            const distanceUnit = document.getElementById('distanceUnit').value;
+
+            const now = new Date();
+            const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+            const dateTime = now.toLocaleString();
+
+            const activity = {
+                type: document.getElementById('activityType').value,
+                duration: durationUnit === 'hours' ? duration * 60 : duration,
+                distance: distanceUnit === 'miles' ? distance * 1.60934 : distance,
+                date: dateTime,
+                day: dayName,
+                user: currentUser.username
+            };
+
+            activities.push(activity);
+            localStorage.setItem('activities', JSON.stringify(activities));
+            showNotification('Activity added successfully!');
+            updateDashboard();
+            renderActivities();
+            document.getElementById('activityForm').reset();
+            checkGoalAchievement();
+        });
+
+        // Update Dashboard
+        function updateDashboard() {
+            const userActivities = activities.filter(a => a.user === currentUser?.username);
+            const totalActivities = userActivities.length;
+            const totalDuration = userActivities.reduce((sum, activity) => sum + activity.duration, 0);
+            const totalDistance = userActivities.reduce((sum, activity) => sum + activity.distance, 0);
+
+            document.getElementById('totalActivities').textContent = totalActivities;
+            document.getElementById('totalDuration').textContent = totalDuration;
+            document.getElementById('totalDistance').textContent = totalDistance.toFixed(1);
+
+            const progress = (totalDuration / DAILY_GOAL) * 100;
+            const progressBar = document.getElementById('goalProgress');
+            progressBar.style.width = `${Math.min(progress, 100)}%`;
+            progressBar.textContent = `${Math.round(progress)}%`;
+        }
+
+        // Render Activities
+        function renderActivities() {
+            const activityList = document.getElementById('activityList');
+            activityList.innerHTML = '';
+            const userActivities = activities.filter(a => a.user === currentUser?.username);
+            userActivities.forEach((activity) => {
+                const card = document.createElement('div');
+                card.className = 'col-md-4 mb-3';
+                card.innerHTML = `
+                    <div class="card activity-card ${activity.type}">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-${getActivityIcon(activity.type)}"></i> ${activity.type}</h5>
+                            <p class="card-text">Duration: ${activity.duration} mins</p>
+                            ${activity.distance > 0 ? `<p class="card-text">Distance: ${activity.distance.toFixed(1)} km</p>` : ''}
+                            <small class="text-muted">${activity.day || 'Unknown Day'}, ${activity.date}</small>
+                        </div>
+                    </div>
+                `;
+                activityList.appendChild(card);
+            });
+        }
+
+        // Get Activity Icon
+        function getActivityIcon(type) {
+            switch (type) {
+                case 'walking': return 'person-walking';
+                case 'running': return 'person-running';
+                case 'cycling': return 'bicycle';
+                case 'swimming': return 'water';
+                default: return 'activity';
+            }
+        }
+
+        // Show Notification
+        function showNotification(message, type = 'success') {
+            notification.textContent = message;
+            notification.className = `alert alert-${type}`;
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // Check Goal Achievement
+        function checkGoalAchievement() {
+            const userActivities = activities.filter(a => a.user === currentUser?.username);
+            const totalDuration = userActivities.reduce((sum, activity) => sum + activity.duration, 0);
+            if (totalDuration >= DAILY_GOAL) {
+                showNotification('🎉 Congratulations! You achieved your daily goal!', 'success');
+            }
+        }
+    </script>
+</body>
+</html>
