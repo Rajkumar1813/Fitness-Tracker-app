@@ -141,7 +141,7 @@
                     <div class="card-body">
                         <h5><i class="bi bi-trophy-fill"></i> Daily Goal Progress</h5>
                         <div class="mb-2">
-                            <label>Daily Goal: <span id="dailyGoalValue">30</span> minutes</label>
+                            <label>Daily Goal: <span id="dailyGoalValue">60</span> minutes</label>
                             <div class="progress">
                                 <div id="goalProgress" class="progress-bar" role="progressbar" style="width: 0%"></div>
                             </div>
@@ -246,7 +246,7 @@
         let users = JSON.parse(localStorage.getItem('users')) || [];
         let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
         let activities = JSON.parse(localStorage.getItem('activities')) || [];
-        const DAILY_GOAL = 30; // Fixed daily goal in minutes
+        const DAILY_GOAL = 60; // Daily goal increased to 60 minutes (1 hour)
 
         // DOM Elements
         const activityFormSection = document.getElementById('activityFormSection');
